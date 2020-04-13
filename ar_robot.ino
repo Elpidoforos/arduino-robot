@@ -24,58 +24,94 @@ Ultrasonic Sensor HC-SR04 and Arduino Tutorial
 #include <Servo.h>
 
 // DC motor on M2, M4
-AF_DCMotor right_motor2(2);
-AF_DCMotor left_motor4(4);
+AF_DCMotor rightMotor(2);
+AF_DCMotor leftMotor(4);
 
 // Create a servo object
-Servo myservo; 
+Servo myServo; 
 
-// Stepper motor on M2+M4 48 steps per revolution
+// Servo initial position
+int servoPos = 0;    
+
+// Defines pins for Ultrasound sensor
+const int trigPin = A5;
+const int echoPin = A0;
+
+// Ultrasonic related variables
+long duration;
+int distance;
+
 void setup() {
-  Serial.begin(9600);           // set up Serial library at 9600 bps
+  Serial.begin(9600);
   Serial.println("Robot start moving");
  
   // turn on motor #2 and #4
-  right_motor2.setSpeed(200);
-  left_motor4.setSpeed(245);
-  // attach the servo in pin 10
-  myservo.attach(10); 
+  rightMotor.setSpeed(200);
+  leftMotor.setSpeed(245); // Left motor it is slower (hardware issue)
+
+  // Servo pin = 10
+  myServo.attach(10); 
+
+  pinMode(trigPin, OUTPUT); // Sets the trigPin as an Output
+  pinMode(echoPin, INPUT); // Sets the echoPin as an Input
 }
 
-// variable to store the servo position
-int servo_pos = 0;    
 
-// Test the DC motor, stepper and servo ALL AT ONCE!
 void loop() {
-
+   
   // Servo from 15 - 165 degrees and backwards
-  for(servo_pos=15 ; servo_pos<=165 ; servo_pos++){
-      myservo.write(servo_pos);
+  for(servoPos=15 ; servoPos<=165 ; servoPos++){
+      myServo.write(servoPos);
       delay(30);
+      distance = scanUltrasoundDistance();
   }
-  for(servo_pos=165 ; servo_pos>15 ; servo_pos--){
-      myservo.write(servo_pos);
+  for(servoPos=165 ; servoPos>15 ; servoPos--){
+      myServo.write(servoPos);
       delay(30);
+      distance = scanUltrasoundDistance();
   }
 
 /*
-  right_motor2.run(FORWARD);
-  left_motor4.run(FORWARD);
+  rightMotor.run(FORWARD);
+  leftMotor.run(FORWARD);
   delay(5000);
   
-  right_motor2.run(RELEASE);
-  left_motor4.run(RELEASE);
+  rightMotor.run(RELEASE);
+  leftMotor.run(RELEASE);
 
   delay(100);
 
-  right_motor2.run(BACKWARD);
-  left_motor4.run(BACKWARD);
+  rightMotor.run(BACKWARD);
+  leftMotor.run(BACKWARD);
   delay(5000);
 
-  right_motor2.run(RELEASE);
-  left_motor4.run(RELEASE);
+  rightMotor.run(RELEASE);
+  leftMotor.run(RELEASE);
 
   delay(100);
 
   */
+}
+
+int scanUltrasoundDistance() {
+    // Clears the trigPin
+    digitalWrite(trigPin, LOW);
+    delayMicroseconds(2);
+
+    // Sets the trigPin on HIGH state for 10 micro seconds
+    digitalWrite(trigPin, HIGH);
+    delayMicroseconds(10);
+    digitalWrite(trigPin, LOW);
+
+    // Reads the echoPin, returns the sound wave travel time in microseconds
+    duration = pulseIn(echoPin, HIGH);
+
+    // Calculating the distance
+    distance= duration*0.034/2;
+
+    // Prints the distance on the Serial Monitor
+    Serial.print("Distance: ");
+    Serial.println(distance);
+
+    return distance;
 }
